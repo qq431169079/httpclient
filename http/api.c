@@ -5,8 +5,10 @@
 
 #define BASE_URL "http://127.0.0.1:8080/api"
 
-char *getSealBase64(char *sn) {
-    char *url = joinString(BASE_URL, "/v1/seal/getFindBySn");
+void releaseHttp(ft_http_client_t *);
+
+int getSealBase64(char *sn, char **pOut) {
+    char *url = joinString(BASE_URL, "/v1/seal/getSealBase64BySn");
     cJSON *param = cJSON_CreateObject();
     cJSON_AddStringToObject(param, "sn", sn);
     char *out = cJSON_PrintUnformatted(param);
@@ -17,26 +19,20 @@ char *getSealBase64(char *sn) {
     url = joinString(url, c);
     ft_http_init();
     ft_http_client_t *client = ft_http_new();
-    char *ret = ft_http_sync_request(client, url, M_POST);
-    printf("%s\n", ret);
+    char *result = ft_http_sync_request(client, url, M_POST);
     int error_code = ft_http_get_error_code(client);
-    ft_http_destroy(client);
-    ft_http_exit(client);
-    ft_http_deinit();
-    if (error_code == ERR_OK && ret != NULL) {
-        cJSON *json = cJSON_Parse(ret);
-        cJSON *json_code;
-        json_code = cJSON_GetObjectItem(json, "code");
-        if (0 == json_code->valueint) {
-            cJSON *json_data = cJSON_GetObjectItem(json, "data");
-            cJSON *json_base64 = cJSON_GetObjectItem(json_data, "sealBase64");
-            return json_base64->valuestring;
-        }
+    if (error_code == ERR_OK) {
+        int nOutLen = strlen(result);
+        char *pTmp = (char *) malloc(nOutLen + 1);
+        memcpy(pTmp, result, nOutLen);
+        pTmp[nOutLen] = 0;
+        *pOut = pTmp;
     }
-    return "";
+    releaseHttp(client);
+    return error_code;
 }
 
-char *getSealListInfoBySn(char *sn) {
+int getSealListInfoBySn(char *sn, char **pOut) {
     char *url = joinString(BASE_URL, "/v1/seal/getSealListInfoBySn");
     cJSON *param = cJSON_CreateObject();
     cJSON_AddStringToObject(param, "sn", sn);
@@ -48,21 +44,17 @@ char *getSealListInfoBySn(char *sn) {
     url = joinString(url, c);
     ft_http_init();
     ft_http_client_t *client = ft_http_new();
-    char *ret = ft_http_sync_request(client, url, M_POST);
+    char *result = ft_http_sync_request(client, url, M_POST);
     int error_code = ft_http_get_error_code(client);
-    ft_http_destroy(client);
-    ft_http_exit(client);
-    ft_http_deinit();
-    if (error_code == ERR_OK && ret != NULL) {
-        cJSON *json = cJSON_Parse(ret);
-        cJSON *json_code;
-        json_code = cJSON_GetObjectItem(json, "code");
-        if (0 == json_code->valueint) {
-            cJSON *json_data = cJSON_GetObjectItem(json, "data");
-            return json_data->valuestring;
-        }
+    if (error_code == ERR_OK) {
+        int nOutLen = strlen(result);
+        char *pTmp = (char *) malloc(nOutLen + 1);
+        memcpy(pTmp, result, nOutLen);
+        pTmp[nOutLen] = 0;
+        *pOut = pTmp;
     }
-    return "";
+    releaseHttp(client);
+    return error_code;
 }
 
 char *joinString(char *s1, char *s2) {
@@ -73,6 +65,11 @@ char *joinString(char *s1, char *s2) {
     return result;
 }
 
+void releaseHttp(ft_http_client_t *client) {
+    ft_http_destroy(client);
+    ft_http_exit(client);
+    ft_http_deinit();
+}
 
 int URLEncode(const char *str, const int strSize, char *result, const int resultSize) {
     int i;

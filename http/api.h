@@ -10,12 +10,13 @@
 #ifndef UNTITLED_API_H
 #define UNTITLED_API_H
 
+
 int URLEncode(const char *, const int, char *, const int);
 
 char *joinString(char *, char *);
 
-char *getSealBase64(char *);
+int getSealBase64(char *, char **);
 
-char *getSealListInfoBySn(char *);
+int getSealListInfoBySn(char *, char **);
 
 #endif //UNTITLED_API_H
